@@ -2,7 +2,6 @@ package com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
@@ -13,6 +12,8 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.R
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.*
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.FullScreenHelper
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.MuteHelper
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.loadOrCueVideo
 
 private const val AUTO_INIT_ERROR = "YouTubePlayerView: If you want to initialize this view manually, " +
@@ -34,6 +35,7 @@ class YouTubePlayerView(
   constructor(context: Context, attrs: AttributeSet? = null) : this(context, attrs, 0)
 
   private val fullscreenListeners = mutableListOf<FullscreenListener>()
+  private val muteHelper = MuteHelper(this)
 
   /**
    * A single [FullscreenListener] that is always added to the WebView,
@@ -56,9 +58,17 @@ class YouTubePlayerView(
   }
 
   private val legacyTubePlayerView = LegacyYouTubePlayerView(context, webViewFullscreenListener)
+  private val fullScreenHelper = FullScreenHelper(this)
 
   // this is a publicly accessible API
   var enableAutomaticInitialization: Boolean
+  val useWebUi: Boolean
+  val enableLiveVideoUi: Boolean
+  val showYouTubeButton: Boolean
+  val showFullScreenButton: Boolean
+  val showVideoCurrentTime: Boolean
+  val showVideoDuration: Boolean
+  val showSeekBar: Boolean
 
   init {
     addView(legacyTubePlayerView, matchParent)
@@ -69,6 +79,14 @@ class YouTubePlayerView(
     val autoPlay = typedArray.getBoolean(R.styleable.YouTubePlayerView_autoPlay, false)
     val handleNetworkEvents = typedArray.getBoolean(R.styleable.YouTubePlayerView_handleNetworkEvents, true)
     val videoId = typedArray.getString(R.styleable.YouTubePlayerView_videoId)
+
+    useWebUi = typedArray.getBoolean(R.styleable.YouTubePlayerView_useWebUi, false)
+    enableLiveVideoUi = typedArray.getBoolean(R.styleable.YouTubePlayerView_enableLiveVideoUi, false)
+    showYouTubeButton = typedArray.getBoolean(R.styleable.YouTubePlayerView_showYouTubeButton, true)
+    showFullScreenButton = typedArray.getBoolean(R.styleable.YouTubePlayerView_showFullScreenButton, true)
+    showVideoCurrentTime = typedArray.getBoolean(R.styleable.YouTubePlayerView_showVideoCurrentTime, true)
+    showVideoDuration = typedArray.getBoolean(R.styleable.YouTubePlayerView_showVideoDuration, true)
+    showSeekBar = typedArray.getBoolean(R.styleable.YouTubePlayerView_showSeekBar, true)
 
     typedArray.recycle()
 
@@ -93,6 +111,25 @@ class YouTubePlayerView(
         IFramePlayerOptions.default
       )
     }
+
+    legacyTubePlayerView.addFullScreenListener(object : YouTubePlayerFullScreenListener {
+      override fun onYouTubePlayerEnterFullScreen() {
+        fullScreenHelper.enterFullScreen()
+      }
+
+      override fun onYouTubePlayerExitFullScreen() {
+        fullScreenHelper.exitFullScreen()
+      }
+    })
+    legacyTubePlayerView.addMuteListener(object : YoutubePlayerMuteListener {
+      override fun onYoutubePlayerMuteOn() {
+        muteHelper.muteOn()
+      }
+
+      override fun onYoutubePlayerMuteOff() {
+        muteHelper.muteOff()
+      }
+    })
   }
 
   /**
@@ -236,4 +273,27 @@ class YouTubePlayerView(
       height = targetHeight
     }
   }
+
+  // KEEP METHODS - For custom implementation
+  fun addFullscreenListener(fullscreenListener: YouTubePlayerFullScreenListener) = fullScreenHelper.addFullScreenListener(fullscreenListener)
+
+  fun removeFullscreenListener(fullscreenListener: YouTubePlayerFullScreenListener) = fullScreenHelper.removeFullScreenListener(fullscreenListener)
+
+  fun addMuteListener(muteListener: YoutubePlayerMuteListener): Boolean =
+    legacyTubePlayerView.addMuteListener(muteListener)
+
+  fun removeMuteListener(muteListener: YoutubePlayerMuteListener): Boolean =
+    legacyTubePlayerView.removeMuteListener(muteListener)
+
+  fun muteVideo() = legacyTubePlayerView.muteVideo()
+
+  fun unMuteVideo() = legacyTubePlayerView.unMuteVideo()
+
+  fun toggleMute() = legacyTubePlayerView.toggleMute()
+
+  fun isMute() = legacyTubePlayerView.isMute()
+
+  fun isFullScreen(): Boolean = fullScreenHelper.isFullScreen
+  fun toggleFullscreen() = legacyTubePlayerView.toggleFullScreen()
+  // KEEP METHODS END
 }

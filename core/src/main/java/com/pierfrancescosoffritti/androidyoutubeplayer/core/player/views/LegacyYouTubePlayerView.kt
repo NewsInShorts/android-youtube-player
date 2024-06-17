@@ -11,8 +11,12 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.FullscreenListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerCallback
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerFullScreenListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YoutubePlayerMuteListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.FullScreenHelper
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.MuteHelper
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.NetworkObserver
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.PlaybackResumer
 
@@ -33,6 +37,8 @@ internal class LegacyYouTubePlayerView(
 
   private val networkObserver = NetworkObserver(context.applicationContext)
   private val playbackResumer = PlaybackResumer()
+  private val fullScreenHelper = FullScreenHelper(this)
+  private val muteHelper = MuteHelper(this)
 
   internal var isYouTubePlayerReady = false
   private var initialize = { }
@@ -197,4 +203,32 @@ internal class LegacyYouTubePlayerView(
   fun enableBackgroundPlayback(enable: Boolean) {
     webViewYouTubePlayer.isBackgroundPlaybackEnabled = enable
   }
+
+  // KEEP METHODS - For custom implementation
+  fun addMuteListener(muteListener: YoutubePlayerMuteListener): Boolean =
+    muteHelper.addMuteListener(muteListener)
+
+  fun removeMuteListener(muteListener: YoutubePlayerMuteListener): Boolean =
+    muteHelper.removeMuteListener(muteListener)
+
+  fun muteVideo() = muteHelper.muteOn()
+
+  fun unMuteVideo() = muteHelper.muteOff()
+
+  fun toggleMute() = muteHelper.toggleMute()
+
+  fun isMute() = muteHelper.isMute
+
+  fun addFullScreenListener(fullScreenListener: YouTubePlayerFullScreenListener): Boolean =
+    fullScreenHelper.addFullScreenListener(fullScreenListener)
+
+  fun removeFullScreenListener(fullScreenListener: YouTubePlayerFullScreenListener): Boolean =
+    fullScreenHelper.removeFullScreenListener(fullScreenListener)
+
+  fun enterFullScreen() = fullScreenHelper.enterFullScreen()
+
+  fun exitFullScreen() = fullScreenHelper.exitFullScreen()
+
+  fun toggleFullScreen() = fullScreenHelper.toggleFullScreen()
+  // KEEP METHODS END
 }

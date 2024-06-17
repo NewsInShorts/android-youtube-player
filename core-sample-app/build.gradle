@@ -41,7 +41,6 @@ dependencies {
 
   implementation project(':core')
   implementation project(':custom-ui')
-  implementation project(':chromecast-sender')
 
   implementation "androidx.appcompat:appcompat:$versions.appcompat"
   implementation "androidx.recyclerview:recyclerview:$versions.androidxRecyclerView"
