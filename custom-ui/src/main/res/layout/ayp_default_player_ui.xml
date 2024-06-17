@@ -107,6 +107,17 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentEnd="true" >
 
+            <ImageView
+                android:id="@+id/mute_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ayp_ic_volume_on_24dp"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="@drawable/ayp_background_item_selected"
+                android:contentDescription="@string/ayp_mute_button"/>
+
             <com.pierfrancescosoffritti.androidyoutubeplayer.core.customui.views.YouTubePlayerSeekBar
                 android:id="@+id/youtube_player_seekbar"
                 android:layout_width="0dp"

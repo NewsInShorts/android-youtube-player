@@ -30,6 +30,8 @@ interface PlayerUiController {
   fun showFullscreenButton(show: Boolean): PlayerUiController
   fun setFullscreenButtonClickListener(customFullscreenButtonClickListener: View.OnClickListener): PlayerUiController
 
+  fun showMuteButton(show: Boolean): PlayerUiController
+
   fun showMenuButton(show: Boolean): PlayerUiController
   fun setMenuButtonClickListener(customMenuButtonClickListener: View.OnClickListener): PlayerUiController
 

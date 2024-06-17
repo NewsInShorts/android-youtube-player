@@ -48,6 +48,7 @@ class DefaultPlayerUiController(
   private val playPauseButton: ImageView = rootView.findViewById(R.id.play_pause_button)
   private val youTubeButton: ImageView = rootView.findViewById(R.id.youtube_button)
   private val fullscreenButton: ImageView = rootView.findViewById(R.id.fullscreen_button)
+  private val muteButton: ImageView = rootView.findViewById(R.id.mute_button)
 
   private val customActionLeft: ImageView = rootView.findViewById(R.id.custom_action_left_button)
   private val customActionRight: ImageView = rootView.findViewById(R.id.custom_action_right_button)
@@ -57,6 +58,7 @@ class DefaultPlayerUiController(
 
   private var onFullscreenButtonListener: View.OnClickListener
   private var onMenuButtonClickListener: View.OnClickListener
+  private var onMuteButtonListener: View.OnClickListener
 
   private var isPlaying = false
   private var isPlayPauseButtonEnabled = true
@@ -64,6 +66,12 @@ class DefaultPlayerUiController(
   private var isCustomActionRightEnabled = false
 
   private var isMatchParent = false
+
+  private var wasTimeAdded = false
+  private var startTimestamp = 0L
+
+  var totalTimePlayed: Long = 0L
+  var timesPlayPauseClicked = 0
 
   private val youTubePlayerStateListener = object : AbstractYouTubePlayerListener() {
     override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
@@ -78,7 +86,15 @@ class DefaultPlayerUiController(
         if (isCustomActionRightEnabled) customActionRight.visibility = View.VISIBLE
 
         updatePlayPauseButtonIcon(state === PlayerConstants.PlayerState.PLAYING)
-
+        if (state == PlayerConstants.PlayerState.PLAYING) {
+          startTimestamp = System.currentTimeMillis()
+          wasTimeAdded = false
+        } else if (state == PlayerConstants.PlayerState.PAUSED) {
+          val currentTime = System.currentTimeMillis()
+          val timePlayed = currentTime - startTimestamp
+          totalTimePlayed += timePlayed
+          wasTimeAdded = true
+        }
       } else {
         updatePlayPauseButtonIcon(false)
 
@@ -119,15 +135,19 @@ class DefaultPlayerUiController(
   }
 
   init {
-    onFullscreenButtonListener = View.OnClickListener {
-      isMatchParent = !isMatchParent
-      when (isMatchParent) {
-        true -> youTubePlayerView.matchParent()
-        false -> youTubePlayerView.wrapContent()
-      }
-    }
+    onFullscreenButtonListener = View.OnClickListener { youTubePlayerView.toggleFullscreen() }
 
     onMenuButtonClickListener = View.OnClickListener { youTubePlayerMenu.show(menuButton) }
+    onMuteButtonListener = View.OnClickListener { youTubePlayerView.toggleMute() }
+
+    if (!youTubePlayerView.useWebUi) {
+      enableLiveVideoUi(youTubePlayerView.enableLiveVideoUi)
+      showYouTubeButton(youTubePlayerView.showYouTubeButton)
+      showFullscreenButton(youTubePlayerView.showFullScreenButton)
+      showCurrentTime(youTubePlayerView.showVideoCurrentTime)
+      showDuration(youTubePlayerView.showVideoDuration)
+      showSeekBar(youTubePlayerView.showSeekBar)
+    }
 
     initClickListeners()
   }
@@ -143,6 +163,7 @@ class DefaultPlayerUiController(
     panel.setOnClickListener { fadeControlsContainer.toggleVisibility() }
     playPauseButton.setOnClickListener { onPlayButtonPressed() }
     fullscreenButton.setOnClickListener { onFullscreenButtonListener.onClick(fullscreenButton) }
+    muteButton.setOnClickListener { onMuteButtonListener.onClick(muteButton) }
     menuButton.setOnClickListener { onMenuButtonClickListener.onClick(menuButton) }
   }
 
@@ -259,6 +280,11 @@ class DefaultPlayerUiController(
     return this
   }
 
+  override fun showMuteButton(show: Boolean): PlayerUiController {
+    muteButton.visibility = if (show) View.VISIBLE else View.GONE
+    return this
+  }
+
   override fun setFullscreenButtonClickListener(customFullscreenButtonClickListener: View.OnClickListener): PlayerUiController {
     onFullscreenButtonListener = customFullscreenButtonClickListener
     return this
@@ -269,6 +295,8 @@ class DefaultPlayerUiController(
       youTubePlayer.pause()
     else
       youTubePlayer.play()
+
+    timesPlayPauseClicked++
   }
 
   private fun updateState(state: PlayerConstants.PlayerState) {
@@ -286,4 +314,41 @@ class DefaultPlayerUiController(
     val drawable = if (playing) R.drawable.ayp_ic_pause_36dp else R.drawable.ayp_ic_play_36dp
     playPauseButton.setImageResource(drawable)
   }
+
+  // KEEP METHODS - For custom implementation
+  fun onYoutubePlayerMuteOn() {
+    muteButton.setImageResource(R.drawable.ayp_ic_volume_off_24dp)
+    youTubePlayer.mute()
+  }
+
+  fun onYoutubePlayerMuteOff() {
+    muteButton.setImageResource(R.drawable.ayp_ic_volume_on_24dp)
+    youTubePlayer.unMute()
+  }
+
+  fun onEnterFullscreen() = fullscreenButton.setImageResource(R.drawable.ayp_ic_fullscreen_exit_24dp)
+
+  fun onExitFullscreen() = fullscreenButton.setImageResource(R.drawable.ayp_ic_fullscreen_24dp)
+
+  fun removeFullscreenButton() = showFullscreenButton(false)
+
+  fun cardClicked() {
+    fadeControlsContainer.toggleVisibility()
+  }
+
+  fun getTotalTimePlayedForEvent(): Long {
+    if (!wasTimeAdded) {
+      val currentTime = System.currentTimeMillis()
+      val timePlayed = currentTime - startTimestamp
+      totalTimePlayed += timePlayed
+      wasTimeAdded = true
+    }
+
+    return totalTimePlayed
+  }
+
+  fun setTotalTimePlayedForEvent(resetValue: Long) {
+    totalTimePlayed = resetValue
+  }
+  // KEEP METHODS END
 }
