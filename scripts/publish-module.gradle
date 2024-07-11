@@ -73,6 +73,21 @@ afterEvaluate {
                 }
             }
         }
+
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/newsinshorts/android-maven-repo")
+
+                def properties = new Properties()
+                properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+                credentials {
+                    username = project.findProperty("gpr.user") ?: properties.getProperty("gpr.user")
+                    password = project.findProperty("gpr.key") ?: properties.getProperty("gpr.key")
+                }
+            }
+        }
     }
 }
 
