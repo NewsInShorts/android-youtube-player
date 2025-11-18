@@ -3,7 +3,7 @@ ext.versions = [
         minSdk                          : 17,
         compileSdk                      : 33,
 
-        publishVersion_core             : '12.0.0.nis',
+        publishVersion_core             : '12.0.3.nis',
         publishVersionCode_core         : 19,
 
         publishVersion_chromecast       : '0.28',
